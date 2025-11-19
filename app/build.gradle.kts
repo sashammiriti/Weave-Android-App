@@ -69,8 +69,7 @@ dependencies {
 
     // Auth and Firestore (No version needed due to BOM)
     implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx") // Contains the KTX extensions
-
+    implementation("com.google.firebase:firebase-database-ktx")
     // Critical Coroutines Bridge (Helps link KTX features like .await() and .asFlow())
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
