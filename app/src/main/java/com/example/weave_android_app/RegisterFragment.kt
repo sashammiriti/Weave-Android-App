@@ -1,5 +1,6 @@
 package com.example.weave_android_app
 
+import com.google.firebase.database.FirebaseDatabase
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -47,27 +48,45 @@ class RegisterFragment : Fragment() {
     }
 
     private fun handleRegistration() {
+        val username = binding.etUsername.text.toString() // Get the username
         val email = binding.etEmail.text.toString()
         val password = binding.etPassword.text.toString()
-        // Username is currently optional for display purposes
 
         if (email.isBlank() || password.isBlank() || password.length < 6) {
-            Toast.makeText(context, "Please enter a valid email and a password of at least 6 characters.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Please enter a valid email and password (min 6 chars).", Toast.LENGTH_LONG).show()
             return
         }
 
-        // Create the user with Firebase Authentication
+        // 1. Create Authentication Entry
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(context, "Account created! Logging in...", Toast.LENGTH_SHORT).show()
-                    navigateToHome()
+                    // Authentication successful! Now save details to Database.
+                    val userId = auth.currentUser?.uid ?: ""
+
+                    // 2. Prepare data to save
+                    val userMap = mapOf(
+                        "id" to userId,
+                        "username" to username,
+                        "email" to email
+                    )
+
+                    // 3. Save to Realtime Database under a "users" node
+                    val databaseRef = FirebaseDatabase.getInstance().reference
+                    databaseRef.child("users").child(userId).setValue(userMap)
+                        .addOnSuccessListener {
+                            Toast.makeText(context, "Account created & saved!", Toast.LENGTH_SHORT).show()
+                            navigateToHome()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(context, "Auth success but DB failed: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+
                 } else {
                     Toast.makeText(context, "Registration failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                 }
             }
     }
-
     private fun navigateToHome() {
         // Attempt navigation using the verified action ID
         try {
